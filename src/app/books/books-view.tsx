@@ -21,8 +21,8 @@ const BooksView = (props: BooksViewComponentProps) => {
       <div className="pt-2  flex items-center justify-center ">
         <SearchComponent onSearchChange={setSearchQuery}></SearchComponent>
       </div>
-
-      <div className="flex flex-wrap gap-4 pt-2">
+      {/* <div className="flex flex-wrap gap-4 pt-2 pl-2 "> */}
+      <div className="flex items-center justify-center flex-wrap gap-4 pt-2 pb-2">
         {filteredBooks.length > 0 ? (
           filteredBooks.map((book: Book) => (
             <BookCard key={book.title} {...book} />

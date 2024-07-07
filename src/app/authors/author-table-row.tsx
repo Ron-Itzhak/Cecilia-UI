@@ -18,7 +18,6 @@ const AuthorTableRow: React.FC<AuthorRowProps> = (
   const [isActive, setIsActive] = useState(AuthorRowProps.author.isActive);
 
   const toggleActiveStatus = async () => {
-    // try {
     const updatedAuthor = {
       ...AuthorRowProps.author,
       isActive: !isActive,

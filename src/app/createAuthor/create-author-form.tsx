@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Author } from "@/lib/types";
 import { toast } from "@/components/ui/use-toast";
+import { useState } from "react";
 const MAX_FILE_SIZE = 50000000;
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -58,7 +59,7 @@ export function CreateAuthorForm(props: CreateAuthorFormProps) {
     country: z
       .string()
       .transform((t) => t?.trim())
-      .pipe(z.string().min(1, { message: "country must not be empty" })),
+      .pipe(z.string().min(1, { message: "Country required" })),
     age: z
       .string()
       .transform((val) => Number(val))
@@ -79,28 +80,42 @@ export function CreateAuthorForm(props: CreateAuthorFormProps) {
       .transform((files: any[]) => files[0]),
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    sendRequest(data);
-    console.log({
-      title: "You submitted the following values:",
-      data,
-    });
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setIsSubmitting(true);
+
+    try {
+      const response = await sendRequest(data);
+
+      const toastMessage =
+        response.status === 201
+          ? `Added author successfully`
+          : `Failed to add author`;
+      toast({
+        title: toastMessage,
+        description: `Author : ${data.name} `,
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: "",
-      age: 20,
       country: "",
     },
   });
   const fileRef = form.register("picture");
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   return (
     <Card className="w-[350px]">
       <CardHeader>
-        <CardTitle>Create Author Form</CardTitle>
+        <CardTitle>Create Author</CardTitle>
         <CardDescription>customize details</CardDescription>
       </CardHeader>
       <CardContent>
@@ -160,7 +175,9 @@ export function CreateAuthorForm(props: CreateAuthorFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
           </form>
         </Form>
       </CardContent>
@@ -179,12 +196,5 @@ async function sendRequest(data: any) {
     body: formData,
     method: "post",
   });
-
-  const toastMessage =
-    res.status === 201 ? `Added author successfully` : `Failed to add author`;
-  toast({
-    title: toastMessage,
-    description: `Author : ${formData.get("name")} `,
-  });
-  console.log(res);
+  return res;
 }

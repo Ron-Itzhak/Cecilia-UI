@@ -19,7 +19,6 @@ const BookCard = (book: Book) => {
   const toggleActiveStatus = async () => {
     try {
       const url = `${process.env.NEXT_PUBLIC_API}/books/updateStatus`;
-      console.log(url);
 
       const res = await fetch(url, {
         method: "PUT",
@@ -35,7 +34,6 @@ const BookCard = (book: Book) => {
         res.status === 200
           ? `Updated book status successfully`
           : `Failed to update book status: `;
-      console.log(res.status);
       toast({
         title: toastMessage,
         description: `Book name :${book.title} `,
@@ -46,15 +44,16 @@ const BookCard = (book: Book) => {
         title: "Failed to update book status:",
         description: "erorr in sending request",
       });
-      //console.error("Failed to update book status:", error);
     }
   };
   return (
     <div>
-      <Card className="h-full w-[350px]">
+      <Card className="h-full	 w-[350px]">
         <CardHeader>
-          <CardTitle>{book.title}</CardTitle>
-          <CardDescription>{book.description}</CardDescription>
+          <CardTitle className="truncate ">{book.title}</CardTitle>
+          <CardDescription className="max-h-3">
+            {book.description}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-row space-x-4 p-10">
           <img className="w-60 h-60  object-cover" src={book.image} />

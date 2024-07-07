@@ -52,7 +52,25 @@ export function CreateBookForm(props: CreateBookFormProps) {
     setSelectedAuthor(author!);
   };
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    setIsSubmitting(true);
+
+    try {
+      const response = await sendRequest(data);
+
+      const toastMessage =
+        response.status === 201
+          ? `Book created successfully`
+          : `Failed to create book`;
+      toast({
+        title: toastMessage,
+        description: `Author : ${data.title} `,
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
     sendRequest(data);
   };
 
@@ -60,7 +78,7 @@ export function CreateBookForm(props: CreateBookFormProps) {
     title: z
       .string()
       .transform((t) => t?.trim())
-      .pipe(z.string().min(1, { message: "title must not be empty" }))
+      .pipe(z.string().min(1, { message: "Title is required" }))
       .refine(
         (bookTitle) =>
           selectedAuthor
@@ -76,20 +94,20 @@ export function CreateBookForm(props: CreateBookFormProps) {
     genre: z
       .string()
       .transform((t) => t?.trim())
-      .pipe(z.string().min(1, { message: "genre must not be empty" })),
+      .pipe(z.string().min(1, { message: "Category/Genre required" })),
     description: z
       .string()
       .transform((t) => t?.trim())
-      .pipe(z.string().min(1, { message: "description must not be empty" })),
+      .pipe(z.string().min(1, { message: "Description required" })),
     price: z
       .string()
       .transform((val) => Number(val))
-      .refine((val) => !isNaN(val), { message: "Must be a number" })
-      .refine((val) => val >= 10, { message: "Number must be at least 10" })
-      .refine((val) => val <= 100, { message: "Number must be at most 100" }),
+      .refine((val) => !isNaN(val), { message: "Price Must be a number" })
+      .refine((val) => val >= 10, { message: "Price must be at least 10" })
+      .refine((val) => val <= 100, { message: "Price must be at most 100" }),
     image: z
       .any()
-      .refine((files) => files?.length == 1, "Image is required.")
+      .refine((files) => files?.length == 1, "Image required.")
       .refine(
         (files) => files?.[0]?.size <= MAX_FILE_SIZE,
         `Max file size is 5MB.`
@@ -108,12 +126,13 @@ export function CreateBookForm(props: CreateBookFormProps) {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      price: 10,
       description: "",
       genre: "",
     },
   });
   const fileRef = form.register("image");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <Card className=" w-[350px]">
@@ -144,7 +163,7 @@ export function CreateBookForm(props: CreateBookFormProps) {
                 <FormItem>
                   <FormLabel>Price</FormLabel>
                   <FormControl>
-                    <Input placeholder="enter price" {...field} />
+                    <Input placeholder="price between (20-120)" {...field} />
                   </FormControl>
                   <FormDescription></FormDescription>
                   <FormMessage />
@@ -158,7 +177,7 @@ export function CreateBookForm(props: CreateBookFormProps) {
                 <FormItem>
                   <FormLabel>Category/Genre</FormLabel>
                   <FormControl>
-                    <Input placeholder="enter genre" {...field} />
+                    <Input placeholder="enter Category/Genre" {...field} />
                   </FormControl>
                   <FormDescription></FormDescription>
                   <FormMessage />
@@ -215,7 +234,6 @@ export function CreateBookForm(props: CreateBookFormProps) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="image"
@@ -230,7 +248,9 @@ export function CreateBookForm(props: CreateBookFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>{" "}
           </form>
         </Form>
       </CardContent>
@@ -247,16 +267,8 @@ async function sendRequest(data: any) {
 
   const url = `${process.env.NEXT_PUBLIC_API}/books`;
 
-  const res = await fetch(url, {
+  return fetch(url, {
     body: formData,
     method: "post",
   });
-
-  const toastMessage =
-    res.status === 201 ? `Book created successfully` : `Failed to create book`;
-  toast({
-    title: toastMessage,
-    description: `Book created: ${formData.get("title")} `,
-  });
-  console.log(res);
 }

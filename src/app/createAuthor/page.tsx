@@ -14,7 +14,7 @@ const page = async () => {
   const authors: Author[] = await getAuthors();
 
   return (
-    <div className=" pt-2  flex items-center justify-center ">
+    <div className=" pt-2 flex items-center justify-center ">
       <CreateAuthorForm authors={authors}></CreateAuthorForm>
     </div>
   );
